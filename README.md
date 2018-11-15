@@ -7,3 +7,12 @@ A tiny wrapper for addressing all pulse audio outputs at once, hacked together f
 ```
 sudo make install
 ```
+
+## Usage
+
+```
+  --change-volume int
+       Change the volume by a given percent (negative to decrease volume) on all outputs
+  --toggle-mute
+       Toggle mute on all outputs
+```
