@@ -17,13 +17,13 @@ func main() {
 	var change int
 	var mute bool
 
-	flag.BoolVar(&mute, "toggle-mute", mute, "Mute active output")
+	flag.BoolVar(&mute, "toggle-mute", mute, "Toggle mute on the active output")
 	flag.IntVar(&change, "change-volume", change, "Change the volume by a given percent (negative to decrease volume) on the active output")
 	flag.Parse()
 
 	c, err := getActiveOutput()
 	if err != nil {
-		fmt.Printf("Error discovering sound outputs: %s\n", err)
+		fmt.Printf("Error discovering active output: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -72,10 +72,8 @@ func getActiveOutput() (*output, error) {
 		if strings.HasSuffix(line, "RUNNING") {
 			p := strings.Split(line, " ")
 			return &output{id: p[0]}, nil
-
 		}
 	}
 
 	return nil, fmt.Errorf("No active output found")
-
 }
