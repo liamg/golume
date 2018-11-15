@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type card struct {
+type output struct {
 	id string
 }
 
@@ -17,13 +17,13 @@ func main() {
 	var change int
 	var mute bool
 
-	flag.BoolVar(&mute, "toggle-mute", mute, "Mute all outputs")
-	flag.IntVar(&change, "change-volume", change, "Change the volume by a given percent (negative to decrease volume) on all outputs")
+	flag.BoolVar(&mute, "toggle-mute", mute, "Mute active output")
+	flag.IntVar(&change, "change-volume", change, "Change the volume by a given percent (negative to decrease volume) on the active output")
 	flag.Parse()
 
-	cards, err := getCards()
+	c, err := getActiveOutput()
 	if err != nil {
-		fmt.Printf("Error discovering sound cards: %s\n", err)
+		fmt.Printf("Error discovering sound outputs: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -32,25 +32,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, c := range cards {
-		if mute {
-			if err := c.ToggleMute(); err != nil {
-				fmt.Printf("Error toggling mute on card #%s: %s\n", c.id, err)
-			}
-		} else if change != 0 {
-			if err := c.ChangeVolume(change); err != nil {
-				fmt.Printf("Error adjusting volume on card #%s: %s\n", c.id, err)
-			}
+	if mute {
+		if err := c.ToggleMute(); err != nil {
+			fmt.Printf("Error toggling mute on output #%s: %s\n", c.id, err)
+		}
+	}
+
+	if change != 0 {
+		if err := c.ChangeVolume(change); err != nil {
+			fmt.Printf("Error adjusting volume on output #%s: %s\n", c.id, err)
 		}
 	}
 
 }
 
-func (c card) ToggleMute() error {
+func (c output) ToggleMute() error {
 	return exec.Command("pactl", "set-sink-mute", c.id, "toggle").Run()
 }
 
-func (c card) ChangeVolume(changePct int) error {
+func (c output) ChangeVolume(changePct int) error {
 
 	changeArg := fmt.Sprintf("%d%%", changePct)
 	if changePct >= 0 {
@@ -60,32 +60,22 @@ func (c card) ChangeVolume(changePct int) error {
 	return exec.Command("pactl", "set-sink-volume", c.id, changeArg).Run()
 }
 
-func getCards() ([]card, error) {
+func getActiveOutput() (*output, error) {
 
-	output, err := exec.Command("pactl", "list").Output()
+	out, err := exec.Command("pactl", "list", "short").Output()
 	if err != nil {
 		return nil, err
 	}
 
-	cards := []card{}
-
-	var c *card
-	lines := strings.Split(string(output), "\n")
+	lines := strings.Split(string(out), "\n")
 	for _, line := range lines {
-		if strings.HasPrefix(line, "Card #") {
-			if c != nil {
-				cards = append(cards, *c)
-			}
-			c = &card{
-				id: line[6:],
-			}
+		if strings.HasSuffix(line, "RUNNING") {
+			p := strings.Split(line, " ")
+			return &output{id: p[0]}, nil
+
 		}
 	}
 
-	if c != nil {
-		cards = append(cards, *c)
-	}
-
-	return cards, nil
+	return nil, fmt.Errorf("No active output found")
 
 }

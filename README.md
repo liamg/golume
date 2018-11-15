@@ -1,6 +1,6 @@
 # Golume
 
-A tiny wrapper for addressing all pulse audio outputs at once, hacked together for nicer i3 key mappings when switching between laptop speakers/headphones.
+A tiny wrapper for addressing the active pulse audio output, hacked together for nicer i3 key mappings when switching between laptop speakers/headphones.
 
 ## Install
 
