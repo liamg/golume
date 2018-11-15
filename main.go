@@ -17,7 +17,7 @@ func main() {
 	var change int
 	var mute bool
 
-	flag.BoolVar(&mute, "toggle-mute", mute, "Mute all outputs")
+	flag.BoolVar(&mute, "toggle-mute", mute, "Toggle mute on all outputs")
 	flag.IntVar(&change, "change-volume", change, "Change the volume by a given percent (negative to decrease volume) on all outputs")
 	flag.Parse()
 
